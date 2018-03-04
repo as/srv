@@ -13,7 +13,7 @@ var (
 
 // readBytes reads a 64bit length-prefixed byte slice
 // in the form: [8]n [n]byte
-func readBytes(r io.Reader, max int64) ([]byte, error){
+func readBytes(r io.Reader, max int64) ([]byte, error) {
 	n := int64(0)
 	err := binary.Read(r, binary.BigEndian, &n)
 	if err != nil {
@@ -50,7 +50,6 @@ func readString(r io.Reader, max int64) (string, error) {
 	s, err := readBytes(r, max)
 	return string(s), err
 }
-func writeString(w io.Writer, s string) ( error) {
+func writeString(w io.Writer, s string) error {
 	return writeBytes(w, []byte(s))
 }
-

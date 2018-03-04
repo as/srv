@@ -58,7 +58,7 @@ func (r *remoteFileInfo) ReadBinary(src io.Reader) error {
 	if err != nil {
 		return err
 	}
-	
+
 	name, err := readString(src, MaxFilename)
 	if err != nil {
 		if err == ErrStrlen {

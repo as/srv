@@ -52,8 +52,8 @@ func Dial(netw, addr string) (*Client, error) {
 
 func (f *Client) Stat(name string) (fi os.FileInfo, err error) {
 	f.WriteHeader("Sta", name)
-	
-	if err = f.Flush(); err != nil{
+
+	if err = f.Flush(); err != nil {
 		return nil, err
 	}
 
@@ -62,7 +62,7 @@ func (f *Client) Stat(name string) (fi os.FileInfo, err error) {
 }
 func (f *Client) Get(name string) (data []byte, err error) {
 	f.WriteHeader("Get", name)
-	if err = f.Flush(); err != nil{
+	if err = f.Flush(); err != nil {
 		return nil, err
 	}
 
@@ -75,11 +75,11 @@ func (f *Client) Get(name string) (data []byte, err error) {
 }
 func (f *Client) Put(name string, data []byte) (err error) {
 	f.WriteHeader("Put", name)
-	if err = f.Flush(); err != nil{
+	if err = f.Flush(); err != nil {
 		return err
 	}
-	
-	if err = writeBytes(f, data); err != nil{
+
+	if err = writeBytes(f, data); err != nil {
 		defer f.Flush()
 		return err
 	}

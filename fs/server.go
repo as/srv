@@ -29,10 +29,10 @@ func (c *client) Read(p []byte) (n int, err error) {
 }
 func (c *client) Flush() error {
 	err := c.bio.Flush()
-	if err != nil{
+	if err != nil {
 		log.Printf("flush: %s\n", err)
 	}
-	return  err
+	return err
 }
 
 func Serve(netw, addr string) (*Server, error) {
@@ -122,7 +122,6 @@ func (s *Server) handle(c *client) {
 				data, err := s.Local.Get(string(ln))
 				if err != nil {
 					log.Printf("get: %s\n", err)
-					continue
 				}
 
 				err = writeBytes(c, data)
@@ -133,7 +132,6 @@ func (s *Server) handle(c *client) {
 				data, err := readBytes(c, 1e12)
 				if err != nil {
 					log.Printf("put: data read err: %s\n", err)
-					continue
 				}
 
 				err = s.Local.Put(string(ln), data)
