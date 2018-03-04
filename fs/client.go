@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"bufio"
 	"context"
 	"encoding/binary"
 	"io"
@@ -13,6 +14,25 @@ import (
 
 type Client struct {
 	conn net.Conn
+	bio  *bufio.ReadWriter
+}
+
+func (c *Client) WriteHeader(msg string, name string) error {
+	_, err := c.Write([]byte(msg + name + "\n"))
+	return err
+}
+
+func (c *Client) Write(p []byte) (n int, err error) {
+	return c.bio.Write(p)
+}
+func (c *Client) Read(p []byte) (n int, err error) {
+	return c.bio.Read(p)
+}
+func (c *Client) Flush() error {
+	return c.bio.Flush()
+}
+func (c *Client) Close() error {
+	return c.conn.Close()
 }
 
 func Dial(netw, addr string) (*Client, error) {
@@ -21,45 +41,51 @@ func Dial(netw, addr string) (*Client, error) {
 		log.Printf("dial: %s\n", err)
 		return nil, err
 	}
-	return &Client{conn}, nil
+	return &Client{
+		conn: conn,
+		bio: bufio.NewReadWriter(
+			bufio.NewReader(conn),
+			bufio.NewWriter(conn),
+		),
+	}, nil
 }
 
 func (f *Client) Stat(name string) (fi os.FileInfo, err error) {
-	println("e Stat", name)
-	defer println("x Stat", name)
-	f.conn.Write([]byte("Sta" + name + "\n"))
+	f.WriteHeader("Sta", name)
+	
+	if err = f.Flush(); err != nil{
+		return nil, err
+	}
+
 	r := &remoteFileInfo{}
-	return r, r.ReadBinary(f.conn)
+	return r, r.ReadBinary(f)
 }
 func (f *Client) Get(name string) (data []byte, err error) {
-	println("e Get", name)
-	defer println("x Get", name)
-	f.conn.Write([]byte("Get" + name + "\n"))
+	f.WriteHeader("Get", name)
+	if err = f.Flush(); err != nil{
+		return nil, err
+	}
+
 	n := int64(0)
-	err = binary.Read(f.conn, binary.BigEndian, &n)
+	err = binary.Read(f, binary.BigEndian, &n)
 	if err != nil {
 		log.Printf("get: write len: %s\n", err)
 	}
-	return ioutil.ReadAll(io.LimitReader(f.conn, n))
+	return ioutil.ReadAll(io.LimitReader(f, n))
 }
 func (f *Client) Put(name string, data []byte) (err error) {
-	println("e Put", name)
-	defer println("x Put", name)
-	f.conn.Write([]byte("Put" + name + "\n"))
-	err = binary.Write(f.conn, binary.BigEndian, int64(len(data)))
-	if err != nil {
-		log.Printf("put: write len: %s\n", err)
+	f.WriteHeader("Put", name)
+	if err = f.Flush(); err != nil{
+		return err
+	}
+	
+	if err = writeBytes(f, data); err != nil{
+		defer f.Flush()
+		return err
 	}
 
-	_, err = f.conn.Write(data)
-	if err != nil {
-		log.Printf("get: write: %s\n", err)
-	}
-	return err
+	return f.Flush()
 }
 func (f *Client) Cmd(ctx context.Context, name string, arg ...string) (*exec.Cmd, error) {
 	return nil, nil
-}
-func (f *Client) Close() error {
-	return f.conn.Close()
 }

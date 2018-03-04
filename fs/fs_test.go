@@ -2,6 +2,7 @@ package fs
 
 import (
 	"os"
+	"sync"
 	"testing"
 )
 
@@ -20,12 +21,22 @@ func TestFSGet(t *testing.T) {
 
 func TestServerClient(t *testing.T) {
 	srv := testServer(t, "tcp", "localhost:0")
-	client := testClient(t, srv)
 	defer srv.Close()
 
-	testput(t, client, createfiles...)
-	defer clean(t, client, createfiles...)
-	testget(t, client, createfiles...)
+	var wg sync.WaitGroup
+	for i := range createfiles {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c := testClient(t, srv)
+			defer c.Close()
+			testput(t, c, createfiles[i])
+			defer clean(t, c, createfiles[i])
+			testget(t, c, createfiles[i])
+		}()
+	}
+	wg.Wait()
 }
 
 func clean(t *testing.T, fs Fs, f ...testfile) {

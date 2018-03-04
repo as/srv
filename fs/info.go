@@ -50,7 +50,7 @@ func (r *remoteFileInfo) WriteBinary(dst io.Writer) (err error) {
 	if err != nil {
 		return err
 	}
-	return writeString(dst, string(bintime))
+	return writeBytes(dst, bintime)
 }
 
 func (r *remoteFileInfo) ReadBinary(src io.Reader) error {
@@ -58,7 +58,7 @@ func (r *remoteFileInfo) ReadBinary(src io.Reader) error {
 	if err != nil {
 		return err
 	}
-	println(1)
+	
 	name, err := readString(src, MaxFilename)
 	if err != nil {
 		if err == ErrStrlen {
@@ -68,18 +68,15 @@ func (r *remoteFileInfo) ReadBinary(src io.Reader) error {
 	}
 	r.name = name
 
-	println(2)
 	modtime, err := readString(src, 64)
 	if err != nil {
 		return err
 	}
 
-	println(3)
 	if err = r.mod.UnmarshalBinary([]byte(modtime)); err != nil {
 		return err
 	}
 
-	println(4)
 	return err
 }
 

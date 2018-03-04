@@ -3,9 +3,7 @@ package fs
 import (
 	"bufio"
 	"bytes"
-	"encoding/binary"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 )
@@ -18,8 +16,23 @@ type Server struct {
 
 type client struct {
 	conn net.Conn
+	bio  *bufio.ReadWriter
 	rx   chan []byte
 	tx   chan []byte
+}
+
+func (c *client) Write(p []byte) (n int, err error) {
+	return c.bio.Write(p)
+}
+func (c *client) Read(p []byte) (n int, err error) {
+	return c.bio.Read(p)
+}
+func (c *client) Flush() error {
+	err := c.bio.Flush()
+	if err != nil{
+		log.Printf("flush: %s\n", err)
+	}
+	return  err
 }
 
 func Serve(netw, addr string) (*Server, error) {
@@ -47,7 +60,8 @@ func Serve(netw, addr string) (*Server, error) {
 					log.Printf("accept: %s\n", err)
 					continue
 				}
-				go s.handle(&client{conn, make(chan []byte), make(chan []byte)})
+				bio := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+				go s.handle(&client{conn, bio, make(chan []byte), make(chan []byte)})
 			}
 		}
 	}()
@@ -67,22 +81,22 @@ func (s *Server) Close() error {
 }
 
 func (s *Server) handle(c *client) {
-	bio := bufio.NewReader(c.conn)
 	defer c.conn.Close()
 	for {
-		hdr := make([]byte, 3)
-		_, err := io.ReadAtLeast(bio, hdr, len(hdr))
-		if err != nil {
-			log.Printf("invalid header: %s", err)
-		}
 		select {
 		case <-s.donesrv:
 			return
 		default:
 		}
+		hdr := make([]byte, 3)
+		_, err := io.ReadAtLeast(c, hdr, len(hdr))
+		if err != nil {
+			return
+			log.Printf("invalid header: %s", err)
+		}
 		switch string(hdr) {
 		case "Get", "Put", "Cmd", "Sta":
-			ln, err := bio.ReadSlice('\n')
+			ln, err := c.bio.ReadSlice('\n')
 			if err != nil {
 				log.Printf("readslice: %s\n", err)
 				break
@@ -93,57 +107,43 @@ func (s *Server) handle(c *client) {
 				fi, err := s.Local.Stat(string(ln))
 				if err != nil {
 					log.Printf("sta: %s\n", err)
-					continue
 				}
+
 				r := new(remoteFileInfo)
 				r.clone(fi)
-				err = r.WriteBinary(c.conn)
+
+				err = r.WriteBinary(c)
 				if err != nil {
 					log.Printf("sta: writebinary: %s", err)
 				}
+				c.Flush()
+
 			case "Get":
 				data, err := s.Local.Get(string(ln))
 				if err != nil {
 					log.Printf("get: %s\n", err)
+					continue
 				}
 
-				err = binary.Write(c.conn, binary.BigEndian, int64(len(data)))
-				if err != nil {
-					log.Printf("get: write len: %s\n", err)
-				}
-
-				_, err = c.conn.Write(data)
-				if err != nil {
-					log.Printf("get: write: %s\n", err)
-				}
+				err = writeBytes(c, data)
+				c.Flush()
 
 			case "Put":
-				n := int64(0)
-				err = binary.Read(bio, binary.BigEndian, &n)
 
-				if err != nil {
-					log.Printf("put: %s\n", err)
-				}
-
-				if n < 0 {
-					log.Printf("put: len<0\n")
-					return
-				}
-
-				data, err := ioutil.ReadAll(io.LimitReader(bio, n))
+				data, err := readBytes(c, 1e12)
 				if err != nil {
 					log.Printf("put: data read err: %s\n", err)
+					continue
 				}
 
 				err = s.Local.Put(string(ln), data)
 				if err != nil {
 					log.Printf("put: local: %s", err)
-					return
 				}
-
 			}
 		default:
 			log.Printf("bad cmd: %s", hdr)
+			return
 		}
 	}
 }
