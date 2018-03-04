@@ -53,7 +53,7 @@ func formatdir(path string) ([]byte, error) {
 		if v.IsDir() {
 			nm += string(os.PathSeparator)
 		}
-		fmt.Fprintf(b, "%s%s", nm, sep)
+		fmt.Fprintf(b, "%s%s", sep, nm)
 		sep = "\t"
 	}
 	return b.Bytes(), nil
