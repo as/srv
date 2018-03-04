@@ -3,12 +3,16 @@ package fs
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"os/exec"
 )
 
 type Local struct {
 }
 
+func (f *Local) Stat(name string) (os.FileInfo, error) {
+	return os.Stat(name)
+}
 func (f *Local) Get(name string) (data []byte, err error) {
 	return ioutil.ReadFile(name)
 }

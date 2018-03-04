@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"os/exec"
 )
 
@@ -23,6 +24,11 @@ func Dial(netw, addr string) (*Client, error) {
 	return &Client{conn}, nil
 }
 
+func (f *Client) Stat(name string) (fi os.FileInfo, err error) {
+	f.conn.Write([]byte("Sta" + name + "\n"))
+	r := &remoteFileInfo{}
+	return r, r.ReadBinary(f.conn)
+}
 func (f *Client) Get(name string) (data []byte, err error) {
 	f.conn.Write([]byte("Get" + name + "\n"))
 	n := int64(0)

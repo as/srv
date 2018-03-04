@@ -42,7 +42,7 @@ func (r *remoteFileInfo) WriteBinary(dst io.Writer) (err error) {
 		return err
 	}
 
-	if err = writeString(dst, r.name); err != nil{
+	if err = writeString(dst, r.name); err != nil {
 		return err
 	}
 
@@ -74,7 +74,6 @@ func (r *remoteFileInfo) ReadBinary(src io.Reader) error {
 		return err
 	}
 
-	
 	if err = r.mod.UnmarshalBinary([]byte(modtime)); err != nil {
 		return err
 	}

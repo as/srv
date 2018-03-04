@@ -81,7 +81,7 @@ func (s *Server) handle(c *client) {
 		default:
 		}
 		switch string(hdr) {
-		case "Get", "Put", "Cmd":
+		case "Get", "Put", "Cmd", "Sta":
 			ln, err := bio.ReadSlice('\n')
 			if err != nil {
 				log.Printf("readslice: %s\n", err)
@@ -89,6 +89,18 @@ func (s *Server) handle(c *client) {
 			}
 			ln = bytes.TrimSpace(ln)
 			switch string(hdr) {
+			case "Sta":
+				fi, err := s.Local.Stat(string(ln))
+				if err != nil {
+					log.Printf("sta: %s\n", err)
+					continue
+				}
+				r := new(remoteFileInfo)
+				r.clone(fi)
+				err = r.WriteBinary(c.conn)
+				if err != nil {
+					log.Printf("sta: writebinary: %s", err)
+				}
 			case "Get":
 				data, err := s.Local.Get(string(ln))
 				if err != nil {
