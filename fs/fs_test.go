@@ -52,7 +52,7 @@ func TestFSGet(t *testing.T) {
 	want := "take me to your leader"
 
 	testput(t, l, name, []byte(want), false)
-	have := testget(t, l, name, false)
+	have := testget(t, l, name, true)
 
 	if string(have) != want {
 		t.Logf("data mismatch: have %q, want %q\n", have, want)
