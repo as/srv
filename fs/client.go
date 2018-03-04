@@ -25,11 +25,15 @@ func Dial(netw, addr string) (*Client, error) {
 }
 
 func (f *Client) Stat(name string) (fi os.FileInfo, err error) {
+	println("e Stat", name)
+	defer println("x Stat", name)
 	f.conn.Write([]byte("Sta" + name + "\n"))
 	r := &remoteFileInfo{}
 	return r, r.ReadBinary(f.conn)
 }
 func (f *Client) Get(name string) (data []byte, err error) {
+	println("e Get", name)
+	defer println("x Get", name)
 	f.conn.Write([]byte("Get" + name + "\n"))
 	n := int64(0)
 	err = binary.Read(f.conn, binary.BigEndian, &n)
@@ -39,6 +43,8 @@ func (f *Client) Get(name string) (data []byte, err error) {
 	return ioutil.ReadAll(io.LimitReader(f.conn, n))
 }
 func (f *Client) Put(name string, data []byte) (err error) {
+	println("e Put", name)
+	defer println("x Put", name)
 	f.conn.Write([]byte("Put" + name + "\n"))
 	err = binary.Write(f.conn, binary.BigEndian, int64(len(data)))
 	if err != nil {

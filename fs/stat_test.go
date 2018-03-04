@@ -21,9 +21,9 @@ func (t testfile) Bytes() []byte {
 }
 
 var commondirs = []testfile{
-	testfile{".", "", false, true},
-	testfile{"..", "", false, true},
-	testfile{"../fs", "", false, true},
+	{".", "", false, true},
+	{"..", "", false, true},
+	{"../fs", "", false, true},
 }
 var createfiles = []testfile{
 	{"fs.test.createfiles0", "hello world", true, false},
@@ -72,7 +72,7 @@ func teststat(t *testing.T, l Fs, f ...testfile) {
 			t.Fatalf("pass %d: have name %q, want %q\n", i, fi.Name(), f.name)
 		}
 		if fi.Size() != f.Size() && !f.dir {
-				t.Fatalf("pass %d: have size %d, want %d\n", i, fi.Size(), f.Size())
+			t.Fatalf("pass %d: have size %d, want %d\n", i, fi.Size(), f.Size())
 		}
 		t.Log(fi)
 	}
