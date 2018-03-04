@@ -1,2 +1,2 @@
 // Package fs implements a basic transactional file system
-package srv
+package fs
