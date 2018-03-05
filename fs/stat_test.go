@@ -44,8 +44,8 @@ func TestSizeOfZeroLengthFile(t *testing.T) {
 func TestStatLocal(t *testing.T) {
 	l := &Local{}
 	testput(t, l, createfiles...)
-	defer clean(t, l, zerolenfile)
-	teststat(t, &Local{}, createfiles...)
+	defer clean(t, l, createfiles...)
+	teststat(t, l, createfiles...)
 }
 func TestStatRemote(t *testing.T) {
 	srv := testServer(t, "tcp", "localhost:0")

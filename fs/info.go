@@ -30,6 +30,9 @@ func (r *remoteFileInfo) String() string {
 }
 
 func (r *remoteFileInfo) clone(fi os.FileInfo) {
+	if fi == nil {
+		return
+	}
 	r.info.Size = fi.Size()
 	r.info.Mode = fi.Mode()
 	r.mod = fi.ModTime()

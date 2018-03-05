@@ -34,6 +34,7 @@ func TestServerClient(t *testing.T) {
 			testput(t, c, createfiles[i])
 			defer clean(t, c, createfiles[i])
 			testget(t, c, createfiles[i])
+			clean(t, c, createfiles[i])
 		}()
 	}
 	wg.Wait()
