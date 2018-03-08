@@ -18,6 +18,7 @@ type Client struct {
 }
 
 func (c *Client) WriteHeader(msg string, name string) error {
+	log.Printf("writeheader: msg %q, name %q", msg, name)
 	_, err := c.Write([]byte(msg + name + "\n"))
 	return err
 }
@@ -74,10 +75,8 @@ func (f *Client) Get(name string) (data []byte, err error) {
 	return ioutil.ReadAll(io.LimitReader(f, n))
 }
 func (f *Client) Put(name string, data []byte) (err error) {
+	println("put", name)
 	f.WriteHeader("Put", name)
-	if err = f.Flush(); err != nil {
-		return err
-	}
 
 	if err = writeBytes(f, data); err != nil {
 		defer f.Flush()

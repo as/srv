@@ -134,6 +134,7 @@ func (s *Server) handle(c *client) {
 					log.Printf("put: data read err: %s\n", err)
 				}
 
+				log.Printf("server: put %q with data %q\n", string(ln), data)
 				err = s.Local.Put(string(ln), data)
 				if err != nil {
 					log.Printf("put: local: %s", err)
